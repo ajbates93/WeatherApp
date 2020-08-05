@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -32,6 +33,16 @@ func main() {
 
 	log.Info("Starting WeatherApp API Server")
 	router := mux.NewRouter()
+
+	cssHandler := http.FileServer(http.Dir("src/"))
+	router.Handle("/static/", http.StripPrefix("/static/", cssHandler))
+	router.Handle("/", http.FileServer(http.Dir("./src")))
 	router.HandleFunc("/ilkley", GetIlkleyWeather).Methods("GET")
 	http.ListenAndServe(":8000", router)
+
+	handler := cors.New(cors.Options{
+		AllowedMethods: []string{"GET"},
+	}).Handler(router)
+
+	http.ListenAndServe(":8000", handler)
 }
